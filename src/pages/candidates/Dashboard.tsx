@@ -92,7 +92,7 @@ const CandidateDashboard = () => {
         <div className="flex gap-6">
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 mb-8">
+              <TabsList className="grid w-full grid-cols-3 mb-8">
                 <TabsTrigger value="resume" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Resume
@@ -104,18 +104,6 @@ const CandidateDashboard = () => {
                 <TabsTrigger value="matches" className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
                   Job Matches
-                </TabsTrigger>
-                <TabsTrigger value="applications" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  Applications
-                </TabsTrigger>
-                <TabsTrigger value="interviews" className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Interviews
-                </TabsTrigger>
-                <TabsTrigger value="linkedin" className="flex items-center gap-2">
-                  <LinkedinIcon className="h-4 w-4" />
-                  LinkedIn
                 </TabsTrigger>
               </TabsList>
 
@@ -234,25 +222,6 @@ const CandidateDashboard = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="applications" className="space-y-6">
-                <div className="text-center py-12">
-                  <Briefcase className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Applications Yet</h3>
-                  <p className="text-muted-foreground">
-                    Start applying to jobs to see your application status here.
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="interviews" className="space-y-6">
-                <div className="text-center py-12">
-                  <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Interviews Scheduled</h3>
-                  <p className="text-muted-foreground">
-                    Your upcoming interviews will appear here.
-                  </p>
-                </div>
-              </TabsContent>
 
               <TabsContent value="profile" className="space-y-6">
                 <div className="text-center py-12">
@@ -265,16 +234,6 @@ const CandidateDashboard = () => {
                 </div>
               </TabsContent>
 
-              <TabsContent value="linkedin" className="space-y-6">
-                <Card className="p-8 text-center">
-                  <LinkedinIcon className="h-16 w-16 mx-auto text-primary mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Connect Your LinkedIn</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Import your LinkedIn profile to enhance your job search.
-                  </p>
-                  <Button>Connect LinkedIn</Button>
-                </Card>
-              </TabsContent>
             </Tabs>
           </div>
 
