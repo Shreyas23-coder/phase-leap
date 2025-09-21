@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
   Plus, 
@@ -12,12 +12,16 @@ import {
   Clock,
   Star,
   Filter,
-  BrainCircuit
+  BrainCircuit,
+  Settings,
+  User
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const RecruiterDashboard = () => {
+  const [activeTab, setActiveTab] = useState("postings");
   // Mock data
   const activeJobs = [
     {
@@ -86,10 +90,9 @@ const RecruiterDashboard = () => {
   ];
 
   const dashboardStats = {
-    activeJobs: 8,
-    totalApplicants: 156,
-    newThisWeek: 23,
-    interviewsScheduled: 7
+    activeJobs: 3,
+    totalApplicants: 86,
+    aiMatches: 50
   };
 
   return (
@@ -111,7 +114,7 @@ const RecruiterDashboard = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid gap-6 mb-8 md:grid-cols-4">
+        <div className="grid gap-6 mb-8 md:grid-cols-3">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -119,7 +122,9 @@ const RecruiterDashboard = () => {
                   <p className="text-sm text-muted-foreground">Active Jobs</p>
                   <p className="text-3xl font-bold">{dashboardStats.activeJobs}</p>
                 </div>
-                <Briefcase className="h-8 w-8 text-primary" />
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Briefcase className="h-8 w-8 text-blue-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -131,7 +136,9 @@ const RecruiterDashboard = () => {
                   <p className="text-sm text-muted-foreground">Total Applicants</p>
                   <p className="text-3xl font-bold">{dashboardStats.totalApplicants}</p>
                 </div>
-                <Users className="h-8 w-8 text-accent" />
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Users className="h-8 w-8 text-green-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -140,157 +147,126 @@ const RecruiterDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">New This Week</p>
-                  <p className="text-3xl font-bold text-success">{dashboardStats.newThisWeek}</p>
+                  <p className="text-sm text-muted-foreground">AI Matches</p>
+                  <p className="text-3xl font-bold">{dashboardStats.aiMatches}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Interviews</p>
-                  <p className="text-3xl font-bold text-warning">{dashboardStats.interviewsScheduled}</p>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <BrainCircuit className="h-8 w-8 text-purple-600" />
                 </div>
-                <UserCheck className="h-8 w-8 text-warning" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Active Jobs */}
-          <div className="lg:col-span-2 space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="postings" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Your Job Postings
+            </TabsTrigger>
+            <TabsTrigger value="matching" className="flex items-center gap-2">
+              <BrainCircuit className="h-4 w-4" />
+              AI Candidate Matching
+            </TabsTrigger>
+            <TabsTrigger value="pipeline" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Candidate Pipeline
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="postings" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold">Active Job Postings</h2>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+              <h2 className="text-2xl font-semibold">Your Job Postings</h2>
+              <select className="px-3 py-2 border rounded-md text-sm">
+                <option>Active Jobs</option>
+                <option>All Jobs</option>
+                <option>Draft</option>
+              </select>
             </div>
 
-            <div className="space-y-4">
-              {activeJobs.map((job) => (
-                <Card key={job.id} className="hover:shadow-medium transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-xl font-semibold">{job.title}</h3>
-                          <Badge variant="secondary">{job.status}</Badge>
-                          {job.newApplicants > 0 && (
-                            <Badge variant="secondary" className="bg-success/10 text-success">
-                              {job.newApplicants} New
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground">{job.department} • Posted {job.posted}</p>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Link to={`/recruiters/jobs/${job.id}`}>
-                          <Button variant="outline" size="sm">
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                        </Link>
-                        <Link to={`/recruiters/jobs/${job.id}/candidates`}>
-                          <Button size="sm">
-                            Manage
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                    
-                    <div className="grid gap-4 md:grid-cols-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{job.applicants}</span>
-                        <span className="text-muted-foreground">Applicants</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <BrainCircuit className="h-4 w-4 text-primary" />
-                        <span className="font-medium">{job.aiMatches}</span>
-                        <span className="text-muted-foreground">AI Matches</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="h-4 w-4 text-warning" />
-                        <span className="font-medium">{job.interviews}</span>
-                        <span className="text-muted-foreground">Interviews</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Active</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Job Postings Table */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b bg-muted/50">
+                      <tr>
+                        <th className="text-left p-4 font-medium text-muted-foreground">JOB TITLE</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">STATUS</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">POSTED</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">APPLICANTS</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">AI MATCHES</th>
+                        <th className="text-left p-4 font-medium text-muted-foreground">ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b hover:bg-muted/50">
+                        <td className="p-4">
+                          <div>
+                            <h3 className="font-semibold">Senior Software Engineer</h3>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Briefcase className="h-3 w-3" />
+                              TechCorp Inc.
+                            </p>
+                            <p className="text-sm text-muted-foreground">San Francisco, CA (Remote)</p>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div>
+                            <Badge className="bg-green-100 text-green-700">Active</Badge>
+                            <p className="text-xs text-muted-foreground mt-1">Deadline: Apr 30, 2025</p>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm">Mar 28, 2025</span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-semibold">12</span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-semibold">8</span>
+                        </td>
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <Button variant="outline" size="sm" className="w-full text-xs">
+                              View Applicants
+                            </Button>
+                            <Button variant="outline" size="sm" className="w-full text-xs">
+                              <Settings className="h-3 w-3 mr-1" />
+                              Find AI Matches
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <div className="flex justify-center">
-              <Link to="/recruiters/jobs">
-                <Button variant="outline">
-                  View All Jobs
-                </Button>
-              </Link>
+          <TabsContent value="matching" className="space-y-6">
+            <div className="text-center py-12">
+              <BrainCircuit className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">AI Candidate Matching</h3>
+              <p className="text-muted-foreground mb-4">
+                Advanced AI algorithms to match candidates with your job postings.
+              </p>
+              <Button>Start AI Matching</Button>
             </div>
-          </div>
+          </TabsContent>
 
-          {/* Top AI-Matched Candidates */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Top AI Matches</h2>
-              <Badge variant="secondary" className="bg-primary/10 text-primary">
-                <BrainCircuit className="mr-1 h-3 w-3" />
-                AI Powered
-              </Badge>
+          <TabsContent value="pipeline" className="space-y-6">
+            <div className="text-center py-12">
+              <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Candidate Pipeline</h3>
+              <p className="text-muted-foreground mb-4">
+                Manage your recruitment pipeline and track candidate progress.
+              </p>
+              <Button>View Pipeline</Button>
             </div>
-
-            <div className="space-y-3">
-              {topCandidates.map((candidate) => (
-                <Card key={candidate.id} className="cursor-pointer hover:shadow-soft transition-shadow">
-                  <Link to={`/recruiters/candidates/${candidate.id}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="space-y-1">
-                          <h4 className="font-semibold">{candidate.name}</h4>
-                          <p className="text-sm text-muted-foreground">{candidate.title}</p>
-                        </div>
-                        <Badge 
-                          variant="secondary" 
-                          className={`${candidate.matchScore >= 95 ? 'bg-success/10 text-success' : 
-                                    candidate.matchScore >= 90 ? 'bg-warning/10 text-warning' : 
-                                    'bg-info/10 text-info'
-                                   }`}
-                        >
-                          <Star className="mr-1 h-3 w-3" />
-                          {candidate.matchScore}%
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-1 text-sm text-muted-foreground">
-                        <p>{candidate.location} • {candidate.experience}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {candidate.status}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Link>
-                </Card>
-              ))}
-            </div>
-
-            <Link to="/recruiters/candidates">
-              <Button variant="outline" className="w-full">
-                View All Candidates
-              </Button>
-            </Link>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
