@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BrainCircuit, Users, Target, Zap, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/ui/navigation";
-import heroImage from "@/assets/hero-recruitment.jpg";
+import heroBackground from "@/assets/hero-background.jpg";
 
 const Landing = () => {
   return (
@@ -12,68 +12,56 @@ const Landing = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero">
-        <div className="container py-20 md:py-28">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Powered by AI
-                </Badge>
-                <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-                  The Future of
-                  <span className="bg-gradient-primary bg-clip-text text-transparent"> Smart </span>
-                  Recruitment
-                </h1>
-                <p className="text-xl text-muted-foreground max-w-lg">
-                  Connect top talent with dream opportunities through AI-powered matching. 
-                  Experience recruitment that understands skills, culture, and potential.
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/candidates">
-                  <Button size="lg" className="w-full sm:w-auto bg-gradient-primary hover:opacity-90 transition-opacity">
-                    <Users className="mr-2 h-5 w-5" />
-                    Find My Dream Job
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/recruiters">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    <Target className="mr-2 h-5 w-5" />
-                    Hire Top Talent
-                  </Button>
-                </Link>
-              </div>
-              
-              <div className="flex items-center space-x-8 text-sm text-muted-foreground">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span>95% Match Accuracy</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span>50% Faster Hiring</span>
-                </div>
-              </div>
+      <section 
+        className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${heroBackground})` }}
+      >
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/30"></div>
+        
+        {/* Content */}
+        <div className="relative z-10 container px-4 text-center text-white">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="space-y-6">
+              <Badge variant="secondary" className="bg-white/10 text-white border-white/20 backdrop-blur-sm">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Powered by AI
+              </Badge>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+                The Future of
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent"> Smart </span>
+                Recruitment
+              </h1>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                Connect top talent with dream opportunities through AI-powered matching. 
+                Experience recruitment that understands skills, culture, and potential.
+              </p>
             </div>
             
-            <div className="relative">
-              <img 
-                src={heroImage} 
-                alt="AI-powered recruitment platform" 
-                className="rounded-2xl shadow-large"
-              />
-              <div className="absolute -bottom-4 -left-4 bg-card p-4 rounded-xl shadow-medium border">
-                <div className="flex items-center space-x-2">
-                  <BrainCircuit className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="font-semibold text-sm">AI Match Score</p>
-                    <p className="text-2xl font-bold text-success">94%</p>
-                  </div>
-                </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/candidates">
+                <Button size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
+                  <Users className="mr-2 h-5 w-5" />
+                  Find My Dream Job
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/recruiters">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm">
+                  <Target className="mr-2 h-5 w-5" />
+                  Hire Top Talent
+                </Button>
+              </Link>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-sm text-white/80">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                <span>95% Match Accuracy</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                <span>50% Faster Hiring</span>
               </div>
             </div>
           </div>
