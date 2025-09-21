@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BrainCircuit, Users, Target, Zap, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navigation from "@/components/ui/navigation";
-import heroImage from "@/assets/hero-recruitment-new.jpg";
+import heroImage from "@/assets/hero-recruitment.jpg";
 
 const Landing = () => {
   return (
