@@ -47,12 +47,25 @@ All colors MUST be HSL.
 
     --radius: 1rem;
 
+    /* Recruiter Dashboard Colors */
+    --stat-blue: 220 70% 95%;
+    --stat-blue-icon: 220 70% 50%;
+    --stat-purple: 270 60% 95%;
+    --stat-purple-icon: 270 60% 50%;
+    --stat-mint: 160 60% 95%;
+    --stat-mint-icon: 160 60% 45%;
+    --stat-coral: 15 80% 95%;
+    --stat-coral-icon: 15 80% 55%;
+    --success-green: 160 60% 45%;
+    --warning-orange: 30 90% 55%;
+
     /* Violet/Lavender Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 70% 65%));
     --gradient-hero: linear-gradient(135deg, hsl(220 40% 96%), hsl(262 40% 96%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(262 40% 98% / 0.8));
     --gradient-accent: linear-gradient(135deg, hsl(195 100% 60%), hsl(210 100% 65%));
     --gradient-glow: radial-gradient(circle at 50% 50%, hsl(262 83% 58% / 0.15), transparent 70%);
+    --gradient-dashboard: linear-gradient(135deg, hsl(240 30% 98%) 0%, hsl(250 40% 96%) 50%, hsl(220 35% 97%) 100%);
 
     /* Enhanced Shadows */
     --shadow-soft: 0 2px 12px -3px hsl(262 83% 58% / 0.12);
