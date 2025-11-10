@@ -21,12 +21,13 @@ import {
   ArrowUp
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
-import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PostJobModal } from "@/components/PostJobModal";
 
 const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState("postings");
+  const [isPostJobModalOpen, setIsPostJobModalOpen] = useState(false);
   // Mock data
   const activeJobs = [
     {
@@ -155,13 +156,15 @@ const RecruiterDashboard = () => {
               <br />talent faster than ever before.
             </p>
           </div>
-          <Link to="/recruiters/jobs/new">
-            <Button size="lg" className="bg-success-green hover:bg-success-green/90 text-white shadow-lg">
-              <Plus className="mr-2 h-5 w-5" />
-              Post Premium Job
-              <Sparkles className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            className="bg-success-green hover:bg-success-green/90 text-white shadow-lg"
+            onClick={() => setIsPostJobModalOpen(true)}
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Post Premium Job
+            <Sparkles className="ml-2 h-4 w-4" />
+          </Button>
         </div>
 
         {/* Stats Overview */}
@@ -442,6 +445,8 @@ const RecruiterDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <PostJobModal open={isPostJobModalOpen} onOpenChange={setIsPostJobModalOpen} />
     </div>
   );
 };
