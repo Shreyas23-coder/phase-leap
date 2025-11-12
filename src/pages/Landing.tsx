@@ -124,16 +124,16 @@ const Landing = () => {
                 Join thousands of companies and candidates who've already discovered the power of AI recruitment.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/auth/register?type=candidate">
-                  <Button size="lg" variant="secondary">
-                    Join as Candidate
-                  </Button>
-                </Link>
-                <Link to="/auth/register?type=recruiter">
-                  <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                    Start Recruiting
-                  </Button>
-                </Link>
+              <Link to="/auth?type=candidate">
+                <Button size="lg" variant="secondary">
+                  Join as Candidate
+                </Button>
+              </Link>
+              <Link to="/auth?type=recruiter">
+                <Button size="lg" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  Start Recruiting
+                </Button>
+              </Link>
               </div>
             </CardContent>
           </Card>

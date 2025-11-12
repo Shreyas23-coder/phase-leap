@@ -1,164 +1,227 @@
+import { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BrainCircuit, Users, Building2 } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { BrainCircuit } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const Auth = () => {
+export default function Auth() {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [searchParams] = useSearchParams();
-  const userType = searchParams.get('type') || 'candidate';
-  const [activeTab, setActiveTab] = useState('signin');
+  const defaultType = searchParams.get('type') || 'candidate';
+  const [userType, setUserType] = useState<"candidate" | "recruiter">(defaultType as "candidate" | "recruiter");
+  const navigate = useNavigate();
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock authentication - redirect to appropriate dashboard
-    if (userType === 'recruiter') {
-      window.location.href = '/recruiters';
-    } else {
-      window.location.href = '/candidates';
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            user_type: userType,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Update user type in the users table
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ user_type: userType, full_name: fullName })
+          .eq('auth_user_id', data.user.id);
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+        }
+
+        // Create profile based on user type
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', data.user.id)
+          .single();
+
+        if (userData) {
+          if (userType === 'candidate') {
+            await supabase.from('candidate_profiles').upsert({
+              user_id: userData.id,
+            });
+          } else {
+            await supabase.from('recruiter_profiles').upsert({
+              user_id: userData.id,
+            });
+          }
+        }
+
+        toast.success("Account created successfully!");
+        navigate(userType === 'candidate' ? '/candidates' : '/recruiters');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign up");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('user_type')
+          .eq('auth_user_id', data.user.id)
+          .single();
+
+        toast.success("Signed in successfully!");
+        navigate(userData?.user_type === 'candidate' ? '/candidates' : '/recruiters');
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to sign in");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 mb-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary">
-              <BrainCircuit className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold">TalentAI</span>
-          </Link>
-          <h1 className="text-2xl font-bold">
-            {userType === 'recruiter' ? 'Recruiter' : 'Candidate'} Portal
-          </h1>
-          <p className="text-muted-foreground">
-            Access your AI-powered recruitment dashboard
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-accent/20 p-4">
+      <Card className="w-full max-w-md shadow-large">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-center mb-4">
+            <Link to="/" className="inline-flex items-center space-x-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary">
+                <BrainCircuit className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold">TalentAI</span>
+            </Link>
+          </div>
+          <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
+          <CardDescription className="text-center">
+            AI-Powered Job Matching Platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
-        <Card className="shadow-large">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-4">
-              {userType === 'recruiter' ? (
-                <Building2 className="h-8 w-8 text-primary" />
-              ) : (
-                <Users className="h-8 w-8 text-accent" />
-              )}
-            </div>
-            <CardTitle className="text-center">
-              Welcome {userType === 'recruiter' ? 'Recruiter' : 'Job Seeker'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin" className="space-y-4 mt-6">
-                <form onSubmit={handleAuth} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="Enter your email"
-                      required 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      placeholder="Enter your password"
-                      required 
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-primary">
-                    Sign In
-                  </Button>
-                </form>
-                
-                <div className="text-center text-sm text-muted-foreground">
-                  <Link to="#" className="hover:text-primary">
-                    Forgot your password?
-                  </Link>
+            <TabsContent value="signin">
+              <form onSubmit={handleSignIn} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4 mt-6">
-                <form onSubmit={handleAuth} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input 
-                        id="firstName" 
-                        placeholder="John"
-                        required 
-                      />
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="signup">
+              <form onSubmit={handleSignUp} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>I am a</Label>
+                  <RadioGroup value={userType} onValueChange={(value) => setUserType(value as "candidate" | "recruiter")}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="candidate" id="candidate" />
+                      <Label htmlFor="candidate" className="font-normal cursor-pointer">
+                        Job Seeker / Candidate
+                      </Label>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input 
-                        id="lastName" 
-                        placeholder="Doe"
-                        required 
-                      />
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="recruiter" id="recruiter" />
+                      <Label htmlFor="recruiter" className="font-normal cursor-pointer">
+                        Recruiter / Employer
+                      </Label>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signupEmail">Email</Label>
-                    <Input 
-                      id="signupEmail" 
-                      type="email" 
-                      placeholder="john@example.com"
-                      required 
-                    />
-                  </div>
-                  {userType === 'recruiter' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="company">Company</Label>
-                      <Input 
-                        id="company" 
-                        placeholder="Your company name"
-                        required 
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="signupPassword">Password</Label>
-                    <Input 
-                      id="signupPassword" 
-                      type="password" 
-                      placeholder="Create a password"
-                      required 
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-primary">
-                    Create Account
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-            
-            <div className="mt-6 pt-6 border-t text-center text-sm text-muted-foreground">
-              {userType === 'recruiter' ? (
-                <span>Looking for a job? <Link to="/auth/login?type=candidate" className="text-primary hover:underline">Join as candidate</Link></span>
-              ) : (
-                <span>Hiring talent? <Link to="/auth/login?type=recruiter" className="text-primary hover:underline">Join as recruiter</Link></span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  </RadioGroup>
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Creating account..." : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default Auth;
+}
