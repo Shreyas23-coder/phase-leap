@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
 import { useState } from "react";
+import { ResumeUpload } from "@/components/ResumeUpload";
+import { ProfileForm } from "@/components/ProfileForm";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState("resume");
@@ -96,7 +98,7 @@ const CandidateDashboard = () => {
         <div className="flex gap-6">
           <div className="flex-1">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-card/60 backdrop-blur-xl border border-border/50 p-1.5 rounded-2xl shadow-soft">
+              <TabsList className="grid w-full grid-cols-4 mb-8 bg-card/60 backdrop-blur-xl border border-border/50 p-1.5 rounded-2xl shadow-soft">
                 <TabsTrigger 
                   value="resume" 
                   className="flex items-center gap-2 rounded-xl data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium"
@@ -110,6 +112,14 @@ const CandidateDashboard = () => {
                 >
                   <User className="h-4 w-4" />
                   Profile
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analysis" 
+                  className="flex items-center gap-2 rounded-xl data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-medium"
+                  onClick={() => setActiveTab("matches")}
+                >
+                  <BrainCircuit className="h-4 w-4" />
+                  AI Analysis
                 </TabsTrigger>
                 <TabsTrigger 
                   value="matches" 
@@ -134,29 +144,7 @@ const CandidateDashboard = () => {
                   </p>
                 </div>
 
-                <Card className="p-12 text-center border-2 border-primary/20 bg-gradient-card backdrop-blur-xl hover:border-primary/40 hover:shadow-glow transition-all rounded-2xl">
-                  <div className="flex flex-col items-center space-y-6">
-                    <div className="p-6 bg-gradient-glow rounded-3xl">
-                      <div className="p-4 bg-primary/10 rounded-2xl">
-                        <Upload className="h-16 w-16 text-primary" />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <h3 className="text-2xl font-bold">Upload Your Resume</h3>
-                      <p className="text-muted-foreground max-w-md">
-                        Drag and drop your resume here or click to browse. Our AI will analyze it to extract your skills and experience.
-                      </p>
-                    </div>
-                    <Button 
-                      size="lg" 
-                      className="mt-4 bg-gradient-primary hover:shadow-glow transition-all text-lg px-8 py-6 rounded-xl"
-                    >
-                      <Upload className="mr-2 h-5 w-5" />
-                      Upload & Analyze Resume
-                      <Sparkles className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
-                </Card>
+                <ResumeUpload />
 
                 {/* Feature Cards */}
                 <div className="grid gap-6 md:grid-cols-3 mt-8">
@@ -334,20 +322,7 @@ const CandidateDashboard = () => {
               </TabsContent>
 
               <TabsContent value="profile" className="space-y-6">
-                <Card className="bg-gradient-card backdrop-blur-xl border border-border/50 rounded-2xl">
-                  <CardContent className="text-center py-16">
-                    <div className="inline-flex p-4 bg-primary/10 rounded-3xl mb-6">
-                      <User className="h-16 w-16 text-primary" />
-                    </div>
-                    <h3 className="text-2xl font-bold mb-3">Complete Your Profile</h3>
-                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                      Add more details to improve your job matches and increase visibility to recruiters.
-                    </p>
-                    <Button className="bg-gradient-primary hover:shadow-glow transition-all" size="lg">
-                      Edit Profile
-                    </Button>
-                  </CardContent>
-                </Card>
+                <ProfileForm />
               </TabsContent>
             </Tabs>
           </div>

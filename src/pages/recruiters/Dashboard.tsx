@@ -24,6 +24,7 @@ import Navigation from "@/components/ui/navigation";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PostJobModal } from "@/components/PostJobModal";
+import { CandidatePipeline } from "@/components/CandidatePipeline";
 
 const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState("postings");
@@ -433,15 +434,8 @@ const RecruiterDashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="pipeline" className="space-y-6">
-            <div className="text-center py-12">
-              <User className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Candidate Pipeline</h3>
-              <p className="text-muted-foreground mb-4">
-                Manage your recruitment pipeline and track candidate progress.
-              </p>
-              <Button>View Pipeline</Button>
-            </div>
+          <TabsContent value="pipeline" className="space-y-6 mt-0">
+            <CandidatePipeline />
           </TabsContent>
         </Tabs>
       </div>

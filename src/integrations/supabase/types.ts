@@ -107,42 +107,124 @@ export type Database = {
           },
         ]
       }
+      candidate_pipeline: {
+        Row: {
+          available_date: string | null
+          candidate_id: string
+          created_at: string
+          id: string
+          job_id: string
+          linkedin_url: string | null
+          phone: string | null
+          recruiter_id: string
+          stage: string
+          status_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          available_date?: string | null
+          candidate_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          linkedin_url?: string | null
+          phone?: string | null
+          recruiter_id: string
+          stage?: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          available_date?: string | null
+          candidate_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          linkedin_url?: string | null
+          phone?: string | null
+          recruiter_id?: string
+          stage?: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_pipeline_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_pipeline_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_pipeline_recruiter_id_fkey"
+            columns: ["recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidate_profiles: {
         Row: {
+          certifications: string[] | null
           created_at: string | null
+          education: Json | null
           experience_years: number | null
+          full_name: string | null
           id: string
           job_preferences: Json | null
+          linkedin_url: string | null
           location: string | null
           parsed_resume_json: Json | null
+          phone: string | null
           resume_url: string | null
           skills: string[] | null
           updated_at: string | null
           user_id: string
+          work_experience: Json | null
         }
         Insert: {
+          certifications?: string[] | null
           created_at?: string | null
+          education?: Json | null
           experience_years?: number | null
+          full_name?: string | null
           id?: string
           job_preferences?: Json | null
+          linkedin_url?: string | null
           location?: string | null
           parsed_resume_json?: Json | null
+          phone?: string | null
           resume_url?: string | null
           skills?: string[] | null
           updated_at?: string | null
           user_id: string
+          work_experience?: Json | null
         }
         Update: {
+          certifications?: string[] | null
           created_at?: string | null
+          education?: Json | null
           experience_years?: number | null
+          full_name?: string | null
           id?: string
           job_preferences?: Json | null
+          linkedin_url?: string | null
           location?: string | null
           parsed_resume_json?: Json | null
+          phone?: string | null
           resume_url?: string | null
           skills?: string[] | null
           updated_at?: string | null
           user_id?: string
+          work_experience?: Json | null
         }
         Relationships: [
           {
