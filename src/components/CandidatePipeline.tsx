@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Users, Mail, Phone, Calendar, Linkedin, MapPin } from "lucide-react";
+import { PipelineStageDialog } from "@/components/PipelineStageDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Candidate {
   id: string;
@@ -110,6 +112,9 @@ export const CandidatePipeline = () => {
   const [candidates] = useState<Candidate[]>(mockCandidates);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(candidates[0]);
   const [filterStage, setFilterStage] = useState<string>("all");
+  const [stageDialogOpen, setStageDialogOpen] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<Candidate['stage']>('new');
+  const { toast } = useToast();
 
   const filteredCandidates = filterStage === "all" 
     ? candidates 
@@ -123,6 +128,15 @@ export const CandidatePipeline = () => {
   const handleScheduleInterview = () => {
     // TODO: Implement interview scheduling
     console.log('Schedule interview for:', selectedCandidate?.id);
+  };
+
+  const handleSaveStageNote = (note: string, scheduledDate?: string) => {
+    toast({
+      title: "Stage Updated",
+      description: `Note saved for ${stageLabels[selectedStage]} stage`,
+    });
+    console.log('Saving note:', { stage: selectedStage, note, scheduledDate, candidateId: selectedCandidate?.id });
+    // TODO: Save to database
   };
 
   return (
@@ -280,13 +294,17 @@ export const CandidatePipeline = () => {
                     const isCompleted = index <= (['new', 'contacted', 'screening', 'interview', 'offer'] as const).indexOf(selectedCandidate.stage);
                     return (
                       <div key={stage} className="flex flex-col items-center gap-2">
-                        <div 
-                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
-                            isCompleted ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
+                        <button
+                          onClick={() => {
+                            setSelectedStage(stage);
+                            setStageDialogOpen(true);
+                          }}
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${
+                            isCompleted ? 'bg-primary text-white hover:shadow-glow' : 'bg-muted text-muted-foreground hover:bg-muted/80'
                           }`}
                         >
                           {stageLabels[stage].slice(0, 3)}
-                        </div>
+                        </button>
                         <span className="text-xs font-medium">{stageLabels[stage]}</span>
                       </div>
                     );
@@ -354,6 +372,18 @@ export const CandidatePipeline = () => {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Pipeline Stage Dialog */}
+      {selectedCandidate && (
+        <PipelineStageDialog
+          open={stageDialogOpen}
+          onOpenChange={setStageDialogOpen}
+          stage={selectedStage}
+          candidateName={selectedCandidate.name}
+          initialNote={selectedCandidate.statusNote}
+          onSave={handleSaveStageNote}
+        />
       )}
     </div>
   );

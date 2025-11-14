@@ -5,7 +5,11 @@ import { Upload, Sparkles, FileText, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export const ResumeUpload = () => {
+interface ResumeUploadProps {
+  onUploadSuccess?: (data: any) => void;
+}
+
+export const ResumeUpload = ({ onUploadSuccess }: ResumeUploadProps = {}) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
@@ -63,6 +67,12 @@ export const ResumeUpload = () => {
       if (error) throw error;
 
       setUploadedFile(file.name);
+      
+      // Call success callback if provided
+      if (onUploadSuccess) {
+        onUploadSuccess(data);
+      }
+      
       toast({
         title: "Resume Uploaded Successfully",
         description: "Your resume has been analyzed and saved to your profile.",
