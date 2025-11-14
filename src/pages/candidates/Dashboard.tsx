@@ -23,6 +23,7 @@ import { useState, useEffect } from "react";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { ProfileForm } from "@/components/ProfileForm";
 import { AIAnalysisCard } from "@/components/AIAnalysisCard";
+import { AICareerChatbot } from "@/components/AICareerChatbot";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState("resume");
@@ -356,66 +357,9 @@ const CandidateDashboard = () => {
 
           {/* AI Career Assistant */}
           {showAIAssistant && (
-            <Card className="w-96 h-fit sticky top-8 bg-gradient-card backdrop-blur-xl border border-border/50 rounded-2xl shadow-large">
-              <CardHeader className="pb-4 border-b border-border/50">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <BrainCircuit className="h-5 w-5 text-primary" />
-                  </div>
-                  AI Career Assistant
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-6">
-                <div className="bg-gradient-glow p-4 rounded-xl border border-primary/10">
-                  <p className="text-sm leading-relaxed">
-                    Hi there! I'm your AI job assistant. How can I help you today?
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all rounded-xl"
-                  >
-                    <Zap className="mr-2 h-4 w-4" />
-                    Resume Analysis
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all rounded-xl"
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Job Recommendations
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all rounded-xl"
-                  >
-                    <Award className="mr-2 h-4 w-4" />
-                    Interview Prep
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all rounded-xl"
-                  >
-                    <BrainCircuit className="mr-2 h-4 w-4" />
-                    Career Advice
-                  </Button>
-                </div>
-
-                <div className="pt-4 border-t border-border/50">
-                  <div className="flex gap-2">
-                    <input 
-                      placeholder="Type your question..."
-                      className="flex-1 px-4 py-2.5 text-sm border border-border/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 bg-background/50 backdrop-blur"
-                    />
-                    <Button className="bg-gradient-primary hover:shadow-glow transition-all rounded-xl">
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="w-96 h-[calc(100vh-200px)] sticky top-8">
+              <AICareerChatbot />
+            </div>
           )}
         </div>
       </div>
