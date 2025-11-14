@@ -19,13 +19,24 @@ import {
   Star
 } from "lucide-react";
 import Navigation from "@/components/ui/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { ProfileForm } from "@/components/ProfileForm";
+import { AIAnalysisCard } from "@/components/AIAnalysisCard";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState("resume");
   const [showAIAssistant, setShowAIAssistant] = useState(true);
+  const [aiMatches, setAiMatches] = useState<any[]>([]);
+  const [resumeData, setResumeData] = useState<any>(null);
+
+  useEffect(() => {
+    // Load AI matches from localStorage
+    const stored = localStorage.getItem('aiMatches');
+    if (stored) {
+      setAiMatches(JSON.parse(stored));
+    }
+  }, [activeTab]);
 
   // Mock data
   const jobMatches = [
@@ -144,7 +155,13 @@ const CandidateDashboard = () => {
                   </p>
                 </div>
 
-                <ResumeUpload />
+                <ResumeUpload onUploadSuccess={(data) => setResumeData(data)} />
+
+                {/* AI Analysis Card */}
+                <AIAnalysisCard 
+                  onAnalysisComplete={() => setActiveTab("matches")}
+                  resumeText={resumeData?.text}
+                />
 
                 {/* Feature Cards */}
                 <div className="grid gap-6 md:grid-cols-3 mt-8">
@@ -222,12 +239,16 @@ const CandidateDashboard = () => {
                   </h2>
                   <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-2 text-sm">
                     <BrainCircuit className="mr-2 h-4 w-4" />
-                    {jobMatches.length} New Matches
+                    {(aiMatches.length > 0 ? aiMatches : jobMatches).length} New Matches
                   </Badge>
                 </div>
 
                 <div className="space-y-4">
-                  {jobMatches.map((job) => (
+                  {(aiMatches.length > 0 ? aiMatches : jobMatches).map((jobItem: any) => {
+                    const job = aiMatches.length > 0 ? jobItem.job : jobItem;
+                    const matchScore = aiMatches.length > 0 ? jobItem.match_score : jobItem.matchScore;
+                    
+                    return (
                     <Card 
                       key={job.id} 
                       className={`group hover:shadow-glow transition-all cursor-pointer rounded-2xl overflow-hidden border-2 ${
@@ -251,13 +272,13 @@ const CandidateDashboard = () => {
                               )}
                               <Badge 
                                 className={`${
-                                  job.matchScore >= 95 
+                                  matchScore >= 95 
                                     ? 'bg-success/10 text-success border-success/20' 
                                     : 'bg-info/10 text-info border-info/20'
                                 } text-sm font-bold px-3 py-1`}
                               >
                                 <Sparkles className="mr-1 h-3 w-3" />
-                                {job.matchScore}% Match
+                                {matchScore}% Match
                               </Badge>
                             </div>
                             
@@ -317,12 +338,18 @@ const CandidateDashboard = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  );
+                  })}
                 </div>
               </TabsContent>
 
               <TabsContent value="profile" className="space-y-6">
                 <ProfileForm />
+                
+                {/* AI Analysis Card */}
+                <AIAnalysisCard 
+                  onAnalysisComplete={() => setActiveTab("matches")}
+                />
               </TabsContent>
             </Tabs>
           </div>
