@@ -26,7 +26,7 @@ serve(async (req) => {
 
     // Fetch all jobs from database
     const { data: jobs, error: jobsError } = await supabase
-      .from('jobs')
+      .from('job_postings')
       .select('*')
       .eq('status', 'active')
       .order('created_at', { ascending: false });

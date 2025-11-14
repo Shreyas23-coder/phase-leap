@@ -50,12 +50,12 @@ export const PipelineStageDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="pipeline-stage-description">
         <DialogHeader>
           <DialogTitle className="text-xl">
             {stageLabels[stage]} - {candidateName}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <p id="pipeline-stage-description" className="text-sm text-muted-foreground">
             {stageDescriptions[stage]}
           </p>
         </DialogHeader>
