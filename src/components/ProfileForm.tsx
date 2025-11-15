@@ -50,13 +50,22 @@ export const ProfileForm = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+
+        // Get the user record from public.users table
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', authUser.id)
+          .single();
+
+        if (!userData) return;
 
         const { data: profile } = await supabase
           .from('candidate_profiles')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', userData.id)
           .maybeSingle();
 
         if (profile) {
@@ -138,11 +147,28 @@ export const ProfileForm = () => {
     e.preventDefault();
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
         toast({
           title: "Authentication Required",
           description: "Please sign in to save your profile.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get the user record from public.users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUser.id)
+        .single();
+
+      if (userError || !userData) {
+        console.error('User lookup error:', userError);
+        toast({
+          title: "User Not Found",
+          description: "Please try signing out and signing back in.",
           variant: "destructive",
         });
         return;
@@ -156,7 +182,7 @@ export const ProfileForm = () => {
       const { error } = await supabase
         .from('candidate_profiles')
         .upsert({
-          user_id: user.id,
+          user_id: userData.id,
           full_name: fullName,
           phone: phone,
           linkedin_url: linkedinUrl,

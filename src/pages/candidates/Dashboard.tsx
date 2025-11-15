@@ -35,16 +35,25 @@ const CandidateDashboard = () => {
       setLoading(true);
       
       // Load profile data
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('candidate_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        // Get the user record from public.users table
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', authUser.id)
+          .single();
         
-        if (profile) {
-          setProfileData(profile);
+        if (userData) {
+          const { data: profile } = await supabase
+            .from('candidate_profiles')
+            .select('*')
+            .eq('user_id', userData.id)
+            .maybeSingle();
+          
+          if (profile) {
+            setProfileData(profile);
+          }
         }
       }
       
