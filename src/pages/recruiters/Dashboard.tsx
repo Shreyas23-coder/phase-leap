@@ -25,10 +25,49 @@ import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PostJobModal } from "@/components/PostJobModal";
 import { CandidatePipeline } from "@/components/CandidatePipeline";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { JobMatchesView } from "./JobMatchesView";
 
 const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState("postings");
   const [isPostJobModalOpen, setIsPostJobModalOpen] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+
+  useEffect(() => {
+    loadRecruiterJobs();
+  }, []);
+
+  const loadRecruiterJobs = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (!userData) return;
+
+      const { data: jobsData } = await supabase
+        .from('job_postings')
+        .select('*')
+        .eq('recruiter_id', userData.id)
+        .order('created_at', { ascending: false });
+
+      if (jobsData) {
+        setJobs(jobsData);
+      }
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
   // Mock data
   const activeJobs = [
     {
@@ -321,106 +360,118 @@ const RecruiterDashboard = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsContent value="postings" className="space-y-6 mt-0">
-
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">Active Job Postings</h2>
-              <Select defaultValue="active">
-                <SelectTrigger className="w-[180px] bg-white">
-                  <SelectValue placeholder="Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active Jobs</SelectItem>
-                  <SelectItem value="all">All Jobs</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Job Postings Table */}
-            <Card className="shadow-lg bg-white/80 backdrop-blur">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b bg-muted/30">
-                      <tr>
-                        <th className="text-left p-5 font-semibold text-sm text-foreground">Job Details</th>
-                        <th className="text-left p-5 font-semibold text-sm text-foreground">Performance</th>
-                        <th className="text-left p-5 font-semibold text-sm text-foreground">AI Analytics</th>
-                        <th className="text-left p-5 font-semibold text-sm text-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {jobPostings.map((job, index) => (
-                        <tr key={job.id} className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-transparent'}`}>
-                          <td className="p-5">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-bold text-base">{job.title}</h3>
-                                <Badge variant={job.priority === "High" ? "destructive" : "secondary"} className="text-xs">
-                                  {job.priority}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {job.location}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  {job.salary}
-                                </span>
-                                <Badge variant="outline" className="text-xs">{job.type}</Badge>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-5">
-                            <div className="space-y-1">
-                              <Badge className={job.status === "Active" ? "bg-success-green/20 text-success-green hover:bg-success-green/20" : "bg-warning-orange/20 text-warning-orange hover:bg-warning-orange/20"}>
-                                {job.status}
-                              </Badge>
-                              <p className="text-xs text-muted-foreground">Posted {job.posted}</p>
-                            </div>
-                          </td>
-                          <td className="p-5">
-                            <div className="flex items-center gap-6">
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stat-blue">
-                                  <Users className="h-5 w-5 text-stat-blue-icon" />
-                                </div>
-                                <div>
-                                  <p className="text-lg font-bold text-stat-blue-icon">{job.applicants}</p>
-                                  <p className="text-xs text-muted-foreground">applicants</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stat-purple">
-                                  <BrainCircuit className="h-5 w-5 text-stat-purple-icon" />
-                                </div>
-                                <div>
-                                  <p className="text-lg font-bold text-stat-purple-icon">{job.aiMatches}</p>
-                                  <p className="text-xs text-muted-foreground">AI matches</p>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-5">
-                            <div className="flex gap-2">
-                              <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90">
-                                <Eye className="h-3 w-3 mr-1" />
-                                Review
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                Edit Job
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {selectedJobId ? (
+              <JobMatchesView 
+                jobId={selectedJobId} 
+                onBack={() => setSelectedJobId(null)}
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Active Job Postings</h2>
+                  <Select defaultValue="active">
+                    <SelectTrigger className="w-[180px] bg-white">
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active Jobs</SelectItem>
+                      <SelectItem value="all">All Jobs</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </CardContent>
-            </Card>
+
+                {loadingJobs ? (
+                  <div className="text-center py-12">
+                    <BrainCircuit className="h-12 w-12 animate-pulse mx-auto mb-4 text-primary" />
+                    <p className="text-muted-foreground">Loading your jobs...</p>
+                  </div>
+                ) : jobs.length === 0 ? (
+                  <Card className="p-12 text-center shadow-lg bg-white/80 backdrop-blur">
+                    <Briefcase className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-xl font-bold mb-2">No jobs posted yet</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Start by creating your first job posting with AI-powered candidate matching
+                    </p>
+                    <Button 
+                      onClick={() => setIsPostJobModalOpen(true)}
+                      className="bg-gradient-primary hover:shadow-glow"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Post Your First Job
+                    </Button>
+                  </Card>
+                ) : (
+                  <Card className="shadow-lg bg-white/80 backdrop-blur">
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="border-b bg-muted/30">
+                            <tr>
+                              <th className="text-left p-5 font-semibold text-sm text-foreground">Job Details</th>
+                              <th className="text-left p-5 font-semibold text-sm text-foreground">Salary Range</th>
+                              <th className="text-left p-5 font-semibold text-sm text-foreground">Status</th>
+                              <th className="text-left p-5 font-semibold text-sm text-foreground">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {jobs.map((job, index) => (
+                              <tr key={job.id} className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-transparent'}`}>
+                                <td className="p-5">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-bold text-base">{job.job_title}</h3>
+                                      {job.is_premium && (
+                                        <Badge className="bg-gradient-primary text-white text-xs">
+                                          Premium
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{job.company_name}</p>
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {job.location}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="p-5">
+                                  <span className="flex items-center gap-1 text-sm">
+                                    <DollarSign className="h-3 w-3" />
+                                    ${job.salary_min/1000}k - ${job.salary_max/1000}k
+                                  </span>
+                                </td>
+                                <td className="p-5">
+                                  <Badge className={job.status === "active" ? "bg-success-green/20 text-success-green hover:bg-success-green/20" : "bg-warning-orange/20 text-warning-orange hover:bg-warning-orange/20"}>
+                                    {job.status}
+                                  </Badge>
+                                </td>
+                                <td className="p-5">
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => setSelectedJobId(job.id)}
+                                    >
+                                      <BrainCircuit className="h-4 w-4 mr-2" />
+                                      AI Matches
+                                    </Button>
+                                    <Button variant="ghost" size="sm">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="matching" className="space-y-6">

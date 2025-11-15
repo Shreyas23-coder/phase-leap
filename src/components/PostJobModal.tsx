@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { X, Briefcase, BrainCircuit, Eye, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostJobModalProps {
   open: boolean;
@@ -105,12 +106,73 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
     }
   };
 
-  const handlePublish = () => {
-    toast({
-      title: "Job posted successfully! 🎉",
-      description: "Your job posting is now live and AI matching is active",
-    });
-    onOpenChange(false);
+  const handlePublish = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (!userData) throw new Error("User profile not found");
+
+      // Create job posting
+      const { data: jobData, error: jobError } = await supabase
+        .from('job_postings')
+        .insert([{
+          company_name: formData.companyName,
+          job_title: formData.jobTitle,
+          job_description: formData.description,
+          skills_required: skills,
+          experience_min: parseInt(formData.experienceMin),
+          experience_max: parseInt(formData.experienceMax),
+          salary_min: parseInt(formData.salaryMin) * 1000,
+          salary_max: parseInt(formData.salaryMax) * 1000,
+          location: isRemote ? "Remote" : formData.location,
+          job_type: jobTypes.length > 0 ? jobTypes[0] as any : 'full-time',
+          status: 'active',
+          is_premium: formData.visibility === 'premium',
+          recruiter_id: userData.id
+        }])
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+
+      toast({
+        title: "Job posted successfully! 🎉",
+        description: "Finding matching candidates with AI...",
+      });
+
+      // Trigger AI analysis
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-job', {
+        body: { jobData }
+      });
+
+      if (analysisError) {
+        console.error('AI analysis error:', analysisError);
+      }
+
+      if (analysisData?.success) {
+        toast({
+          title: "AI Analysis Complete",
+          description: `Found ${analysisData.matches.length} matching candidates`,
+        });
+      }
+
+      onOpenChange(false);
+      window.location.reload(); // Refresh to show new job
+    } catch (error) {
+      console.error('Error posting job:', error);
+      toast({
+        title: "Error posting job",
+        description: error instanceof Error ? error.message : "Failed to post job",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
