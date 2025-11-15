@@ -46,14 +46,14 @@ export const AIAnalysisCard = ({ onAnalysisComplete, profileData, resumeText }: 
           onAnalysisComplete();
         }
       } else if (data?.error?.includes('credits') || data?.error?.includes('402')) {
-        // Set flag for low credit banner
+        // Set flag for low credit banner and fallback to non-AI matcher
         localStorage.setItem('ai_credits_low', 'true');
-        
-        toast({
-          title: "AI Credits Low",
-          description: "Unable to run AI analysis. Please add credits or contact support.",
-          variant: "destructive",
-        });
+        toast({ title: 'AI Credits Low', description: 'Using simple matching instead.' });
+        const { data: simpleData, error: simpleError } = await supabase.functions.invoke('get-job-matches', { body: {} });
+        if (!simpleError && simpleData?.matches) {
+          localStorage.setItem('aiMatches', JSON.stringify(simpleData.matches));
+          onAnalysisComplete();
+        }
       }
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : '';
