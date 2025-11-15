@@ -67,15 +67,29 @@ serve(async (req) => {
     }
 
     // Get user record
-    const { data: userData } = await supabaseClient
+    const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('id, user_type')
       .eq('auth_user_id', user.id)
       .single();
 
-    if (!userData || userData.user_type !== 'candidate') {
-      return new Response(JSON.stringify({ error: 'Only candidates can view job matches' }), {
-        status: 403,
+    if (!userData) {
+      console.error('User record not found:', userError);
+      return new Response(JSON.stringify({ 
+        error: 'User profile not found. Please complete your profile setup.',
+        success: false 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (userData.user_type !== 'candidate') {
+      return new Response(JSON.stringify({ 
+        error: 'This feature is only available for candidate accounts.',
+        success: false 
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
