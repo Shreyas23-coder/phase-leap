@@ -187,11 +187,27 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
         body: { jobData }
       });
 
-      if (analysisError) {
-        console.error('AI analysis error:', analysisError);
-      }
-
-      if (analysisData?.success) {
+      if (analysisError || analysisData?.error) {
+        const errMsg = analysisData?.error || analysisError?.message || '';
+        const isCreditIssue = errMsg.includes('credits') || errMsg.includes('402');
+        if (isCreditIssue) {
+          toast({
+            title: "Using Simple Matching",
+            description: "AI credits exhausted. Using skill-based matching instead.",
+          });
+          const { data: simpleData, error: simpleError } = await supabase.functions.invoke('simple-job-match', {
+            body: { jobData }
+          });
+          if (!simpleError && simpleData?.success) {
+            toast({
+              title: "Analysis Complete",
+              description: `Found ${simpleData.matches.length} matching candidates (simple matching)`,
+            });
+          }
+        } else {
+          console.error('AI analysis error:', analysisError || analysisData?.error);
+        }
+      } else if (analysisData?.success) {
         toast({
           title: "AI Analysis Complete",
           description: `Found ${analysisData.matches.length} matching candidates`,
