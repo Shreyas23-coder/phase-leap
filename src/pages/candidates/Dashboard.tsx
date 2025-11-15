@@ -28,10 +28,27 @@ const CandidateDashboard = () => {
   const [aiMatches, setAiMatches] = useState<any[]>([]);
   const [resumeData, setResumeData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
 
   useEffect(() => {
-    const loadJobs = async () => {
+    const loadData = async () => {
       setLoading(true);
+      
+      // Load profile data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('candidate_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profile) {
+          setProfileData(profile);
+        }
+      }
+      
+      // Load jobs
       const { data } = await supabase
         .from('job_postings')
         .select('*')
@@ -53,7 +70,7 @@ const CandidateDashboard = () => {
       }
       setLoading(false);
     };
-    loadJobs();
+    loadData();
   }, []);
 
   const handleAnalysisComplete = () => {
@@ -211,8 +228,8 @@ const CandidateDashboard = () => {
               <TabsContent value="analysis" className="space-y-6">
                 <AIAnalysisCard 
                   onAnalysisComplete={handleAnalysisComplete}
-                  profileData={resumeData}
-                  resumeText={resumeData?.resumeText}
+                  profileData={profileData}
+                  resumeText={resumeData?.resumeText || profileData?.parsed_resume_json?.text}
                 />
               </TabsContent>
 
