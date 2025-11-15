@@ -133,9 +133,10 @@ Return the top 10 matching jobs sorted by match_score (highest first). If the ca
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ 
           error: 'Rate limits exceeded. Please try again later.',
-          success: false
+          success: false,
+          fallback: 'simple-suggested'
         }), {
-          status: 429,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -143,9 +144,10 @@ Return the top 10 matching jobs sorted by match_score (highest first). If the ca
       if (aiResponse.status === 402) {
         return new Response(JSON.stringify({ 
           error: 'Not enough Lovable AI credits. Please add credits in Settings → Workspace → Usage.',
-          success: false
+          success: false,
+          fallback: 'simple-suggested'
         }), {
-          status: 402,
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -154,7 +156,7 @@ Return the top 10 matching jobs sorted by match_score (highest first). If the ca
         error: `AI gateway error: ${aiResponse.status}`,
         success: false
       }), {
-        status: 500,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
