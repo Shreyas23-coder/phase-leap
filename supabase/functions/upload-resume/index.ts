@@ -86,25 +86,53 @@ serve(async (req) => {
       .eq('auth_user_id', user.id)
       .single();
 
-    if (userData) {
-      // Update or create candidate profile
-      const { error: profileError } = await supabaseClient
-        .from('candidate_profiles')
-        .upsert({
-          user_id: userData.id,
-          resume_url: publicUrl,
-          updated_at: new Date().toISOString(),
-        });
+    if (!userData) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-      }
+    // Update candidate profile with resume URL
+    const { error: profileError } = await supabaseClient
+      .from('candidate_profiles')
+      .upsert({
+        user_id: userData.id,
+        resume_url: publicUrl,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (profileError) {
+      console.error('Profile update error:', profileError);
+    }
+
+    // Parse the resume with AI and auto-populate profile
+    console.log('Parsing resume with AI...');
+    const { data: parseData, error: parseError } = await supabaseClient.functions.invoke('parse-resume', {
+      body: { resumeUrl: publicUrl, userId: userData.id }
+    });
+
+    if (parseError) {
+      console.error('Parse error:', parseError);
+      // Don't fail the upload if parsing fails
+    }
+
+    // Auto-trigger AI job matching
+    console.log('Triggering AI job analysis...');
+    const { data: analysisData, error: analysisError } = await supabaseClient.functions.invoke('analyze-profile', {
+      body: {}
+    });
+
+    if (analysisError) {
+      console.error('Analysis error:', analysisError);
     }
 
     return new Response(JSON.stringify({ 
       url: publicUrl,
       fileName: fileName,
-      message: 'Resume uploaded successfully'
+      message: 'Resume uploaded successfully',
+      parsed: parseData?.success || false,
+      matches: analysisData?.matches || []
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

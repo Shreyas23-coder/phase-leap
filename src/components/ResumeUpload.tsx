@@ -68,14 +68,22 @@ export const ResumeUpload = ({ onUploadSuccess }: ResumeUploadProps = {}) => {
 
       setUploadedFile(file.name);
       
+      // Store matches in localStorage if available
+      if (data.matches && data.matches.length > 0) {
+        localStorage.setItem('aiMatches', JSON.stringify(data.matches));
+      }
+      
       // Call success callback if provided
       if (onUploadSuccess) {
         onUploadSuccess(data);
       }
       
+      const matchCount = data.matches?.length || 0;
       toast({
         title: "Resume Uploaded Successfully",
-        description: "Your resume has been analyzed and saved to your profile.",
+        description: data.parsed 
+          ? `Profile auto-populated! Found ${matchCount} matching jobs.`
+          : "Your resume has been uploaded and saved to your profile.",
       });
     } catch (error) {
       console.error('Upload error:', error);
