@@ -26,16 +26,25 @@ export const AIAnalysisCard = ({ onAnalysisComplete, profileData, resumeText }: 
       if (error) throw error;
 
       if (data.success) {
-        toast({
-          title: "Analysis Complete",
-          description: `Found ${data.matches.length} matching jobs for your profile`,
-        });
-        
-        // Store matches in localStorage for the AI Matches tab
-        localStorage.setItem('aiMatches', JSON.stringify(data.matches));
-        
-        // Redirect to AI Matches tab
-        onAnalysisComplete();
+        if (data.message) {
+          // Show message if profile is incomplete
+          toast({
+            title: "Profile Incomplete",
+            description: data.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Analysis Complete",
+            description: `Found ${data.matches.length} matching jobs for your profile`,
+          });
+          
+          // Store matches in localStorage for the AI Matches tab
+          localStorage.setItem('aiMatches', JSON.stringify(data.matches));
+          
+          // Redirect to AI Matches tab
+          onAnalysisComplete();
+        }
       }
     } catch (error) {
       console.error('Error analyzing profile:', error);

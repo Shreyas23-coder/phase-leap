@@ -24,6 +24,51 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get authenticated user from request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    // Create client with user's auth token
+    const userSupabase = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
+
+    const { data: { user } } = await userSupabase.auth.getUser();
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
+
+    // Load fresh profile data from database
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single();
+
+    if (!userData) {
+      throw new Error('User not found');
+    }
+
+    const { data: profile } = await supabase
+      .from('candidate_profiles')
+      .select('*')
+      .eq('user_id', userData.id)
+      .single();
+
+    if (!profile || !profile.skills || profile.skills.length === 0) {
+      return new Response(JSON.stringify({ 
+        success: true,
+        matches: [],
+        message: 'Please complete your profile with skills and experience before analyzing job matches.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Fetch all jobs from database
     const { data: jobs, error: jobsError } = await supabase
       .from('job_postings')
@@ -41,15 +86,15 @@ serve(async (req) => {
     
     const userPrompt = `
 Candidate Profile:
-${JSON.stringify(profileData, null, 2)}
+${JSON.stringify(profile, null, 2)}
 
 Resume Summary:
-${resumeText || 'No resume provided'}
+${resumeText || profile.parsed_resume_json?.text || 'No resume provided'}
 
 Available Jobs:
 ${JSON.stringify(jobs, null, 2)}
 
-Analyze the candidate's skills, experience, and preferences against the available jobs. Return a JSON array of the top 10 matching jobs with the following structure:
+Analyze the candidate's skills, experience, and preferences against the available jobs. Return ONLY a JSON object with the following structure (no markdown, no code blocks):
 {
   "matches": [
     {
@@ -60,6 +105,8 @@ Analyze the candidate's skills, experience, and preferences against the availabl
     }
   ]
 }
+
+Return the top 10 matching jobs sorted by match_score (highest first). If the candidate has no skills or experience, return an empty matches array.
 `;
 
     // Call Lovable AI
@@ -102,14 +149,21 @@ Analyze the candidate's skills, experience, and preferences against the availabl
     
     const analysisResult = JSON.parse(cleanContent.trim());
 
-    // Validate response structure
-    if (!analysisResult.matches || !Array.isArray(analysisResult.matches)) {
+    // Handle both array and object responses
+    let matches;
+    if (Array.isArray(analysisResult)) {
+      // AI returned array directly
+      matches = analysisResult;
+    } else if (analysisResult.matches && Array.isArray(analysisResult.matches)) {
+      // AI returned object with matches property
+      matches = analysisResult.matches;
+    } else {
       console.error('Invalid AI response structure:', analysisResult);
       throw new Error('AI response does not contain valid matches array');
     }
 
     // Enrich matches with full job data
-    const enrichedMatches = analysisResult.matches.map((match: any) => {
+    const enrichedMatches = matches.map((match: any) => {
       const job = jobs?.find(j => j.id === match.job_id);
       return {
         ...match,
