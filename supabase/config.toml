@@ -24,5 +24,8 @@ verify_jwt = false
 [functions.analyze-job]
 verify_jwt = false
 
+[functions.simple-job-match]
+verify_jwt = false
+
 [functions.seed-database]
 verify_jwt = false

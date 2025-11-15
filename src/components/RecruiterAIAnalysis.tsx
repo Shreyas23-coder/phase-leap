@@ -18,15 +18,42 @@ export const RecruiterAIAnalysis = ({ jobData, onAnalysisComplete }: RecruiterAI
     setIsAnalyzing(true);
     
     try {
+      // Try AI matching first
       const { data, error } = await supabase.functions.invoke('analyze-job', {
         body: { jobData }
       });
+
+      // If AI returns 402 (no credits), automatically fallback to simple matching
+      if (error?.message?.includes('402') || data?.error?.includes('credits')) {
+        console.log('AI credits exhausted, falling back to simple matching');
+        
+        toast({
+          title: "Using Simple Matching",
+          description: "AI credits exhausted. Using skill-based matching instead.",
+        });
+
+        const { data: simpleData, error: simpleError } = await supabase.functions.invoke('simple-job-match', {
+          body: { jobData }
+        });
+
+        if (simpleError) throw simpleError;
+
+        if (simpleData?.success) {
+          toast({
+            title: "Analysis Complete",
+            description: `Found ${simpleData.matches.length} matching candidates using skill-based matching`,
+          });
+          
+          onAnalysisComplete(simpleData.matches);
+        }
+        return;
+      }
 
       if (error) throw error;
 
       if (data?.success) {
         toast({
-          title: "Analysis Complete",
+          title: "AI Analysis Complete",
           description: `Found ${data.matches.length} matching candidates for this position`,
         });
         
