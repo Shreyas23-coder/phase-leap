@@ -24,13 +24,19 @@ export const RecruiterAIAnalysis = ({ jobData, onAnalysisComplete }: RecruiterAI
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data?.success) {
         toast({
           title: "Analysis Complete",
           description: `Found ${data.matches.length} matching candidates for this position`,
         });
         
         onAnalysisComplete(data.matches);
+      } else if (data?.error) {
+        toast({
+          title: "Analysis Failed",
+          description: data.error,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error analyzing job:', error);
