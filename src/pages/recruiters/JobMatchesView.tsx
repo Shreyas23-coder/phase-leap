@@ -102,69 +102,99 @@ export const JobMatchesView = ({ jobId, onBack }: JobMatchesViewProps) => {
       </div>
 
       {job && (
-        <Card className="bg-gradient-card border-border/50">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">{job.job_title}</h2>
-                <p className="text-lg text-muted-foreground">{job.company_name}</p>
-              </div>
-              {job.is_premium && (
-                <Badge className="bg-gradient-primary text-white">
-                  Premium
-                </Badge>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {job.location}
-              </div>
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4" />
-                ${job.salary_min/1000}k - ${job.salary_max/1000}k
-              </div>
-              <div className="flex items-center gap-1">
-                <Briefcase className="h-4 w-4" />
-                {job.experience_min} - {job.experience_max} years
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList>
+            <TabsTrigger value="details">Job Details</TabsTrigger>
+            <TabsTrigger value="matching">
+              <Sparkles className="h-4 w-4 mr-2" />
+              Matching ({matches.length})
+            </TabsTrigger>
+          </TabsList>
 
-      {matches.length === 0 && (
-        <RecruiterAIAnalysis 
-          jobData={job} 
-          onAnalysisComplete={handleAnalysisComplete}
-        />
-      )}
+          <TabsContent value="details" className="space-y-4">
+            <Card className="bg-gradient-card border-border/50">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">{job.job_title}</h2>
+                    <p className="text-lg text-muted-foreground">{job.company_name}</p>
+                  </div>
+                  {job.is_premium && (
+                    <Badge className="bg-gradient-primary text-white">
+                      Premium
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {job.location}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    ${job.salary_min/1000}k - ${job.salary_max/1000}k
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Briefcase className="h-4 w-4" />
+                    {job.experience_min} - {job.experience_max} years
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <h3 className="font-semibold mb-2">Description</h3>
+                  <p className="text-muted-foreground">{job.job_description}</p>
+                </div>
 
-      {matches.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Top {matches.length} AI-Matched Candidates
-            </h3>
-            <Badge className="bg-primary/10 text-primary border-primary/20">
-              Using Gemini 2.5 Flash
-            </Badge>
-          </div>
+                <div className="mt-4">
+                  <h3 className="font-semibold mb-2">Required Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills_required?.map((skill: string) => (
+                      <Badge key={skill} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <div className="grid gap-4">
-            {matches.map((match) => (
-              <MatchedCandidateCard
-                key={match.id}
-                candidate={match.candidate}
-                matchScore={match.match_score}
-                matchingSkills={match.skill_match_details?.matched || []}
-                reason={match.skill_match_details?.reason}
-                skillMatchDetails={match}
+          <TabsContent value="matching" className="space-y-4">
+            {matches.length === 0 && (
+              <RecruiterAIAnalysis 
+                jobData={job} 
+                onAnalysisComplete={handleAnalysisComplete}
               />
-            ))}
-          </div>
-        </div>
+            )}
+
+            {matches.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Top {matches.length} AI-Matched Candidates
+                  </h3>
+                  <Badge className="bg-primary/10 text-primary border-primary/20">
+                    Powered by Gemini AI
+                  </Badge>
+                </div>
+
+                <div className="grid gap-4">
+                  {matches.map((match) => (
+                    <MatchedCandidateCard
+                      key={match.id}
+                      candidate={match.candidate}
+                      matchScore={match.match_score}
+                      matchingSkills={match.skill_match_details?.matched || []}
+                      reason={match.skill_match_details?.reason}
+                      skillMatchDetails={match}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

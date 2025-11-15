@@ -14,9 +14,9 @@ serve(async (req) => {
   try {
     const { jobData } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     // Get Supabase client
@@ -43,60 +43,94 @@ serve(async (req) => {
     }
 
     // Prepare AI prompt
-    const systemPrompt = `You are an expert recruiter AI. Analyze the job posting against available candidates and return the top matching candidates with match scores.`;
-    
-    const userPrompt = `
+    const prompt = `You are an expert recruiter AI. Analyze the following job posting and candidate profiles to find the best matches.
+
 Job Posting:
-${JSON.stringify(jobData, null, 2)}
+Title: ${jobData.job_title}
+Company: ${jobData.company_name}
+Location: ${jobData.location}
+Skills Required: ${jobData.skills_required?.join(', ')}
+Experience Required: ${jobData.experience_min || 0}-${jobData.experience_max || 10} years
+Job Type: ${jobData.job_type}
+Description: ${jobData.job_description}
 
-Available Candidates:
-${JSON.stringify(candidates, null, 2)}
+Candidates:
+${JSON.stringify(candidates.map(c => ({
+  id: c.user.id,
+  name: c.full_name || c.user.full_name,
+  email: c.user.email,
+  location: c.location,
+  skills: c.skills || [],
+  experience_years: c.experience_years || 0
+})), null, 2)}
 
-Analyze each candidate's skills, experience, and preferences against the job requirements. Return a JSON array of the top 20 matching candidates with the following structure:
+Return ONLY a JSON object with this exact structure:
 {
   "matches": [
     {
-      "candidate_id": "user_id",
-      "match_score": 95,
+      "candidate_id": "uuid",
+      "match_score": 85,
       "matching_skills": ["skill1", "skill2"],
-      "reason": "Brief explanation of why this is a good match"
+      "reason": "Brief explanation of why this candidate is a good match"
     }
   ]
 }
-`;
 
-    // Call Lovable AI
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
+Important:
+- Only include candidates with match_score >= 60
+- Sort by match_score (highest first)
+- Return maximum 10 candidates
+- Use exact candidate IDs from the input`;
+
+    // Call Gemini API
+    const aiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          }
+        })
+      }
+    );
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('AI gateway error:', aiResponse.status, errorText);
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+      console.error('Gemini API error:', aiResponse.status, errorText);
+      throw new Error(`Gemini API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    let content = aiData.choices[0].message.content;
+    const responseText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
     
-    // Remove markdown code blocks if present
-    if (content.includes('```json')) {
-      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    if (!responseText) {
+      throw new Error('No response from Gemini');
     }
+
+    // Extract JSON from response (handle markdown code blocks)
+    let content = responseText.trim();
+    if (content.startsWith('```json')) {
+      content = content.slice(7);
+    }
+    if (content.startsWith('```')) {
+      content = content.slice(3);
+    }
+    if (content.endsWith('```')) {
+      content = content.slice(0, -3);
+    }
+    content = content.trim();
     
-    const analysisResult = JSON.parse(content.trim());
+    const analysisResult = JSON.parse(content);
 
     // Save matches to database
     const matchRecords = analysisResult.matches.map((match: any) => ({

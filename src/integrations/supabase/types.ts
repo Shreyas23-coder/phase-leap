@@ -430,7 +430,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      switch_user_type: {
+        Args: { new_type: Database["public"]["Enums"]["user_type"] }
+        Returns: undefined
+      }
     }
     Enums: {
       application_status: "pending" | "reviewed" | "shortlisted" | "rejected"
