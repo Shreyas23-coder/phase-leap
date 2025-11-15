@@ -132,7 +132,7 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
           salary_min: parseInt(formData.salaryMin) * 1000,
           salary_max: parseInt(formData.salaryMax) * 1000,
           location: isRemote ? "Remote" : formData.location,
-          job_type: jobTypes.length > 0 ? jobTypes[0] as any : 'full-time',
+          job_type: jobTypes.length > 0 ? jobTypes[0].toLowerCase().replace(' ', '-') as any : 'full-time',
           status: 'active',
           is_premium: formData.visibility === 'premium',
           recruiter_id: userData.id
