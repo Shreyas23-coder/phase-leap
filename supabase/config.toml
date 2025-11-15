@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.upload-resume]
 verify_jwt = false
 
+[functions.parse-resume]
+verify_jwt = false
+
 [functions.analyze-job]
 verify_jwt = false
 

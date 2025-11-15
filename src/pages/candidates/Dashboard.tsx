@@ -90,6 +90,20 @@ const CandidateDashboard = () => {
     }
   };
 
+  const handleResumeUploadSuccess = (data: any) => {
+    // Update profile data if parsed
+    if (data.parsed && data.profile) {
+      setProfileData(data.profile);
+    }
+    
+    // Update matches if available and switch to matches tab
+    if (data.matches && data.matches.length > 0) {
+      setAiMatches(data.matches);
+      localStorage.setItem('aiMatches', JSON.stringify(data.matches));
+      setActiveTab("matches");
+    }
+  };
+
   const jobMatches = [
     {
       id: 1,
@@ -192,7 +206,7 @@ const CandidateDashboard = () => {
               </TabsList>
 
               <TabsContent value="resume" className="space-y-6">
-                <ResumeUpload onUploadSuccess={setResumeData} />
+                <ResumeUpload onUploadSuccess={handleResumeUploadSuccess} />
               </TabsContent>
 
               <TabsContent value="profile" className="space-y-6">
