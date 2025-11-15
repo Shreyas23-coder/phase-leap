@@ -77,12 +77,17 @@ Important:
 - Return maximum 10 candidates
 - Use exact candidate IDs from the input`;
 
-    // Call Lovable AI (no API key required)
-    const aiResponse = await fetch('https://api.lovable.app/v1/ai/chat/completions', {
+    // Call Lovable AI Gateway
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseKey}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
@@ -92,8 +97,6 @@ Important:
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 2048,
       })
     });
 
