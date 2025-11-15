@@ -229,10 +229,11 @@ const CandidateDashboard = () => {
 
                 <div className="space-y-4">
                   {(aiMatches.length > 0 ? aiMatches : jobMatches).map((jobItem: any) => {
-                    const job = aiMatches.length > 0 ? jobItem.job : jobItem;
-                    const matchScore = aiMatches.length > 0 ? jobItem.match_score : jobItem.matchScore;
-                    const matchingSkills = aiMatches.length > 0 ? jobItem.matching_skills : null;
-                    const matchReason = aiMatches.length > 0 ? jobItem.reason : null;
+                    // Handle both database jobs and AI matched jobs
+                    const job = jobItem.job || jobItem;
+                    const matchScore = jobItem.match_score || jobItem.matchScore || 85;
+                    const matchingSkills = jobItem.matching_skills || null;
+                    const matchReason = jobItem.reason || null;
                     
                     return (
                     <Card 
