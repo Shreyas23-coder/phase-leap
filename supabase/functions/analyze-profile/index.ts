@@ -86,14 +86,27 @@ Analyze the candidate's skills, experience, and preferences against the availabl
     }
 
     const aiData = await aiResponse.json();
-    let content = aiData.choices[0].message.content;
+    const content = aiData.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No content in AI response');
+    }
+
+    console.log('AI Response content:', content);
     
     // Remove markdown code blocks if present
-    if (content.includes('```json')) {
-      content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    let cleanContent = content;
+    if (cleanContent.includes('```json')) {
+      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '');
     }
     
-    const analysisResult = JSON.parse(content.trim());
+    const analysisResult = JSON.parse(cleanContent.trim());
+
+    // Validate response structure
+    if (!analysisResult.matches || !Array.isArray(analysisResult.matches)) {
+      console.error('Invalid AI response structure:', analysisResult);
+      throw new Error('AI response does not contain valid matches array');
+    }
 
     // Enrich matches with full job data
     const enrichedMatches = analysisResult.matches.map((match: any) => {
