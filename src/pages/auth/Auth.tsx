@@ -41,17 +41,10 @@ export default function Auth() {
       if (error) throw error;
 
       if (data.user) {
-        // Update user type in the users table
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ user_type: userType, full_name: fullName })
-          .eq('auth_user_id', data.user.id);
+        // Wait briefly for trigger to create user record
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (updateError) {
-          console.error('Profile update error:', updateError);
-        }
-
-        // Create profile based on user type
+        // Get the user record (created by trigger)
         const { data: userData } = await supabase
           .from('users')
           .select('id')
@@ -59,9 +52,11 @@ export default function Auth() {
           .single();
 
         if (userData) {
+          // Create profile based on user type
           if (userType === 'candidate') {
             await supabase.from('candidate_profiles').upsert({
               user_id: userData.id,
+              full_name: fullName,
             });
           } else {
             await supabase.from('recruiter_profiles').upsert({
@@ -70,7 +65,7 @@ export default function Auth() {
           }
         }
 
-        toast.success("Account created successfully!");
+        toast.success("Account created successfully! Please complete your profile.");
         navigate(userType === 'candidate' ? '/candidates' : '/recruiters');
       }
     } catch (error: any) {
