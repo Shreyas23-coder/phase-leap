@@ -129,7 +129,34 @@ Return the top 10 matching jobs sorted by match_score (highest first). If the ca
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI gateway error:', aiResponse.status, errorText);
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+
+      if (aiResponse.status === 429) {
+        return new Response(JSON.stringify({ 
+          error: 'Rate limits exceeded. Please try again later.',
+          success: false
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ 
+          error: 'Not enough Lovable AI credits. Please add credits in Settings → Workspace → Usage.',
+          success: false
+        }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ 
+        error: `AI gateway error: ${aiResponse.status}`,
+        success: false
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const aiData = await aiResponse.json();
