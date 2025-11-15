@@ -113,11 +113,23 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
       const { data: userData } = await supabase
         .from('users')
-        .select('id')
+        .select('id, user_type')
         .eq('auth_user_id', user.id)
         .single();
 
       if (!userData) throw new Error("User profile not found");
+
+      // Switch user to recruiter if they're not already
+      if (userData.user_type !== 'recruiter') {
+        const { error: switchError } = await supabase.rpc('switch_user_type', {
+          new_type: 'recruiter'
+        });
+
+        if (switchError) {
+          console.error('Error switching user type:', switchError);
+          throw new Error("Failed to switch to recruiter account");
+        }
+      }
 
       // Ensure recruiter profile exists
       const { data: recruiterProfile } = await supabase
