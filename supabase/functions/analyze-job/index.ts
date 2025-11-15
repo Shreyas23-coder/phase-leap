@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { profileData, resumeText } = await req.json();
+    const { jobData } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -24,36 +24,39 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch all jobs from database
-    const { data: jobs, error: jobsError } = await supabase
-      .from('job_postings')
-      .select('*')
-      .eq('status', 'active')
+    // Fetch all candidate profiles from database
+    const { data: candidates, error: candidatesError } = await supabase
+      .from('candidate_profiles')
+      .select(`
+        *,
+        user:users!candidate_profiles_user_id_fkey(
+          id,
+          email,
+          full_name
+        )
+      `)
       .order('created_at', { ascending: false });
 
-    if (jobsError) {
-      console.error('Error fetching jobs:', jobsError);
-      throw jobsError;
+    if (candidatesError) {
+      console.error('Error fetching candidates:', candidatesError);
+      throw candidatesError;
     }
 
     // Prepare AI prompt
-    const systemPrompt = `You are an expert job matching AI. Analyze the candidate's profile and resume against available jobs and return the top matching jobs with match scores.`;
+    const systemPrompt = `You are an expert recruiter AI. Analyze the job posting against available candidates and return the top matching candidates with match scores.`;
     
     const userPrompt = `
-Candidate Profile:
-${JSON.stringify(profileData, null, 2)}
+Job Posting:
+${JSON.stringify(jobData, null, 2)}
 
-Resume Summary:
-${resumeText || 'No resume provided'}
+Available Candidates:
+${JSON.stringify(candidates, null, 2)}
 
-Available Jobs:
-${JSON.stringify(jobs, null, 2)}
-
-Analyze the candidate's skills, experience, and preferences against the available jobs. Return a JSON array of the top 10 matching jobs with the following structure:
+Analyze each candidate's skills, experience, and preferences against the job requirements. Return a JSON array of the top 20 matching candidates with the following structure:
 {
   "matches": [
     {
-      "job_id": "job_id",
+      "candidate_id": "user_id",
       "match_score": 95,
       "matching_skills": ["skill1", "skill2"],
       "reason": "Brief explanation of why this is a good match"
@@ -95,14 +98,14 @@ Analyze the candidate's skills, experience, and preferences against the availabl
     
     const analysisResult = JSON.parse(content.trim());
 
-    // Enrich matches with full job data
+    // Enrich matches with full candidate data
     const enrichedMatches = analysisResult.matches.map((match: any) => {
-      const job = jobs?.find(j => j.id === match.job_id);
+      const candidate = candidates?.find(c => c.user_id === match.candidate_id);
       return {
         ...match,
-        job: job || null
+        candidate: candidate || null
       };
-    }).filter((match: any) => match.job !== null);
+    }).filter((match: any) => match.candidate !== null);
 
     return new Response(JSON.stringify({ 
       success: true,
@@ -112,7 +115,7 @@ Analyze the candidate's skills, experience, and preferences against the availabl
     });
 
   } catch (error) {
-    console.error('Error in analyze-profile function:', error);
+    console.error('Error in analyze-job function:', error);
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error',
       success: false 

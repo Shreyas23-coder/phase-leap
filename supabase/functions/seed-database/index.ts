@@ -56,9 +56,9 @@ serve(async (req) => {
 
     console.log('Starting database seeding...');
 
-    // Create 50 recruiter users for job postings
+    // Create 100 recruiter users for job postings
     const recruiterEmails = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 100; i++) {
       const email = `recruiter${i}@talentai.com`;
       recruiterEmails.push(email);
       

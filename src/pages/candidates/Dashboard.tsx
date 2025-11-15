@@ -31,13 +31,14 @@ const CandidateDashboard = () => {
   const [aiMatches, setAiMatches] = useState<any[]>([]);
   const [resumeData, setResumeData] = useState<any>(null);
 
-  useEffect(() => {
-    // Load AI matches from localStorage
+  const handleAnalysisComplete = () => {
+    // Load matches from localStorage
     const stored = localStorage.getItem('aiMatches');
     if (stored) {
       setAiMatches(JSON.parse(stored));
+      setActiveTab("matches");
     }
-  }, [activeTab]);
+  };
 
   // Mock data
   const jobMatches = [
@@ -248,9 +249,93 @@ const CandidateDashboard = () => {
                   {(aiMatches.length > 0 ? aiMatches : jobMatches).map((jobItem: any) => {
                     const job = aiMatches.length > 0 ? jobItem.job : jobItem;
                     const matchScore = aiMatches.length > 0 ? jobItem.match_score : jobItem.matchScore;
+                    const matchingSkills = aiMatches.length > 0 ? jobItem.matching_skills : null;
+                    const matchReason = aiMatches.length > 0 ? jobItem.reason : null;
                     
                     return (
                     <Card 
+                      key={job.id} 
+                      className={`group hover:shadow-glow transition-all cursor-pointer rounded-2xl overflow-hidden border-2 ${
+                        job.is_premium || job.featured
+                          ? 'border-primary/30 bg-gradient-to-r from-primary/5 via-accent/5 to-transparent' 
+                          : 'border-border/50 bg-gradient-card backdrop-blur-xl'
+                      }`}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="space-y-4 flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="text-xl font-bold hover:text-primary transition-colors">
+                                {job.job_title || job.title}
+                              </h3>
+                              {(job.is_premium || job.featured) && (
+                                <Badge className="bg-gradient-primary text-white px-3 py-1">
+                                  <Star className="h-3 w-3 mr-1" />
+                                  FEATURED
+                                </Badge>
+                              )}
+                              <Badge className="bg-success/10 text-success border-success/20 px-4 py-1.5 text-sm font-bold">
+                                <Sparkles className="h-3 w-3 mr-1.5" />
+                                {matchScore}% Match
+                              </Badge>
+                            </div>
+                            
+                            <p className="text-lg font-semibold text-foreground">
+                              {job.company_name || job.company}
+                            </p>
+                            
+                            {matchReason && (
+                              <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+                                {matchReason}
+                              </p>
+                            )}
+                            
+                            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="h-4 w-4" />
+                                {job.location}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <DollarSign className="h-4 w-4" />
+                                {job.salary_min && job.salary_max 
+                                  ? `$${job.salary_min/1000}k - $${job.salary_max/1000}k`
+                                  : job.salary
+                                }
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                              {matchingSkills ? (
+                                matchingSkills.map((skill: string) => (
+                                  <Badge key={skill} variant="secondary" className="px-3 py-1">
+                                    {skill}
+                                  </Badge>
+                                ))
+                              ) : (
+                                (job.skills_required || job.skills)?.slice(0, 4).map((skill: string) => (
+                                  <Badge key={skill} variant="secondary" className="px-3 py-1">
+                                    {skill}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-3">
+                            <Button className="bg-gradient-primary hover:shadow-glow transition-all whitespace-nowrap">
+                              Apply Now
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" className="border-border/50 hover:border-primary/50 whitespace-nowrap">
+                              Save & Compare
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )})}
+                </div>
+              </TabsContent>
                       key={job.id} 
                       className={`group hover:shadow-glow transition-all cursor-pointer rounded-2xl overflow-hidden border-2 ${
                         job.featured 
