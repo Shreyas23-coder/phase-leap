@@ -98,6 +98,28 @@ Analyze each candidate's skills, experience, and preferences against the job req
     
     const analysisResult = JSON.parse(content.trim());
 
+    // Save matches to database
+    const matchRecords = analysisResult.matches.map((match: any) => ({
+      job_id: jobData.id,
+      candidate_id: match.candidate_id,
+      match_score: match.match_score,
+      skill_match_details: {
+        matched: match.matching_skills,
+        reason: match.reason
+      },
+      experience_match: true,
+      location_match: true
+    }));
+
+    // Insert all matches into database
+    const { error: insertError } = await supabase
+      .from('ai_match_results')
+      .upsert(matchRecords, { onConflict: 'job_id,candidate_id' });
+
+    if (insertError) {
+      console.error('Error saving matches:', insertError);
+    }
+
     // Enrich matches with full candidate data
     const enrichedMatches = analysisResult.matches.map((match: any) => {
       const candidate = candidates?.find(c => c.user_id === match.candidate_id);

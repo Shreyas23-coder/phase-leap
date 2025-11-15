@@ -19,12 +19,42 @@ import { ResumeUpload } from "@/components/ResumeUpload";
 import { ProfileForm } from "@/components/ProfileForm";
 import { AIAnalysisCard } from "@/components/AIAnalysisCard";
 import { AICareerChatbot } from "@/components/AICareerChatbot";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState("resume");
   const [showAIAssistant, setShowAIAssistant] = useState(true);
   const [aiMatches, setAiMatches] = useState<any[]>([]);
   const [resumeData, setResumeData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadJobs = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('job_postings')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (data) {
+        const formattedJobs = data.map(job => ({
+          ...job,
+          title: job.job_title,
+          company: job.company_name,
+          salary: `$${job.salary_min/1000}k - $${job.salary_max/1000}k`,
+          matchScore: 85,
+          featured: job.is_premium,
+          skills: job.skills_required.slice(0, 3)
+        }));
+        setAiMatches(formattedJobs);
+      }
+      setLoading(false);
+    };
+    loadJobs();
+  }, []);
 
   const handleAnalysisComplete = () => {
     const stored = localStorage.getItem('aiMatches');

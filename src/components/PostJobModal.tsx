@@ -119,6 +119,29 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
 
       if (!userData) throw new Error("User profile not found");
 
+      // Ensure recruiter profile exists
+      const { data: recruiterProfile } = await supabase
+        .from('recruiter_profiles')
+        .select('id')
+        .eq('user_id', userData.id)
+        .maybeSingle();
+
+      if (!recruiterProfile) {
+        // Create recruiter profile
+        const { error: profileError } = await supabase
+          .from('recruiter_profiles')
+          .insert([{
+            user_id: userData.id,
+            company_name: formData.companyName,
+            location: isRemote ? "Remote" : formData.location
+          }]);
+
+        if (profileError) {
+          console.error('Error creating recruiter profile:', profileError);
+          throw new Error("Failed to create recruiter profile");
+        }
+      }
+
       // Create job posting
       const { data: jobData, error: jobError } = await supabase
         .from('job_postings')
