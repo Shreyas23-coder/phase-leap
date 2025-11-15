@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X, Briefcase, GraduationCap, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkExperience {
   company: string;
@@ -31,6 +32,7 @@ export const ProfileForm = () => {
   const [newSkill, setNewSkill] = useState("");
   const [certifications, setCertifications] = useState<string[]>([]);
   const [newCertification, setNewCertification] = useState("");
+  const [loading, setLoading] = useState(true);
   
   const [workExperience, setWorkExperience] = useState<WorkExperience[]>([{
     company: "",
@@ -44,6 +46,43 @@ export const ProfileForm = () => {
     degree: "",
     year: ""
   }]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('candidate_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          setFullName(profile.full_name || "");
+          setPhone(profile.phone || "");
+          setLinkedinUrl(profile.linkedin_url || "");
+          setLocation(profile.location || "");
+          setSkills(profile.skills || []);
+          setCertifications(profile.certifications || []);
+          
+          if (Array.isArray(profile.work_experience)) {
+            setWorkExperience(profile.work_experience as unknown as WorkExperience[]);
+          }
+          
+          if (Array.isArray(profile.education)) {
+            setEducation(profile.education as unknown as Education[]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const addSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
@@ -98,22 +137,54 @@ export const ProfileForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // TODO: Integrate with Supabase to save profile
-    console.log({
-      fullName,
-      phone,
-      linkedinUrl,
-      location,
-      skills,
-      certifications,
-      workExperience,
-      education
-    });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to save your profile.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
+      const experienceYears = workExperience.reduce((total, exp) => {
+        const match = exp.duration.match(/(\d+)/);
+        return total + (match ? parseInt(match[0]) : 0);
+      }, 0);
+
+      const { error } = await supabase
+        .from('candidate_profiles')
+        .upsert({
+          user_id: user.id,
+          full_name: fullName,
+          phone: phone,
+          linkedin_url: linkedinUrl,
+          location: location,
+          skills: skills,
+          certifications: certifications,
+          work_experience: workExperience as any,
+          education: education as any,
+          experience_years: experienceYears,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully saved.",
+      });
+    } catch (error) {
+      console.error('Profile save error:', error);
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save profile",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
