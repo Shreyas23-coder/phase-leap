@@ -28,13 +28,16 @@ import { CandidatePipeline } from "@/components/CandidatePipeline";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { JobMatchesView } from "./JobMatchesView";
+import { useToast } from "@/hooks/use-toast";
 
 const RecruiterDashboard = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("postings");
   const [isPostJobModalOpen, setIsPostJobModalOpen] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   useEffect(() => {
     loadRecruiterJobs();
@@ -66,6 +69,39 @@ const RecruiterDashboard = () => {
       console.error('Error loading jobs:', error);
     } finally {
       setLoadingJobs(false);
+    }
+  };
+
+  const handleSeedDatabase = async () => {
+    setIsSeeding(true);
+    toast({
+      title: "Seeding database...",
+      description: "Creating 100 elite jobs and 100 elite candidates. This may take a minute.",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-database', {
+        body: {}
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Database seeded successfully! 🎉",
+        description: "Created 100 elite job postings and 100 elite candidates",
+      });
+
+      // Refresh the jobs list
+      await loadRecruiterJobs();
+    } catch (error) {
+      console.error('Error seeding database:', error);
+      toast({
+        title: "Seeding failed",
+        description: error instanceof Error ? error.message : "Failed to seed database",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSeeding(false);
     }
   };
   // Mock data
@@ -196,15 +232,27 @@ const RecruiterDashboard = () => {
               <br />talent faster than ever before.
             </p>
           </div>
-          <Button 
-            size="lg" 
-            className="bg-success-green hover:bg-success-green/90 text-white shadow-lg"
-            onClick={() => setIsPostJobModalOpen(true)}
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Post Premium Job
-            <Sparkles className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary/10"
+              onClick={handleSeedDatabase}
+              disabled={isSeeding}
+            >
+              <BrainCircuit className="mr-2 h-5 w-5" />
+              {isSeeding ? "Seeding..." : "Seed Database"}
+            </Button>
+            <Button 
+              size="lg" 
+              className="bg-success-green hover:bg-success-green/90 text-white shadow-lg"
+              onClick={() => setIsPostJobModalOpen(true)}
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Post Premium Job
+              <Sparkles className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}

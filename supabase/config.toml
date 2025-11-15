@@ -1,1 +1,25 @@
 project_id = "srrzsxzukwmiaaqyakcm"
+
+[functions.analyze-profile]
+verify_jwt = false
+
+[functions.apply-to-job]
+verify_jwt = false
+
+[functions.career-chatbot]
+verify_jwt = false
+
+[functions.create-job]
+verify_jwt = false
+
+[functions.get-job-matches]
+verify_jwt = false
+
+[functions.upload-resume]
+verify_jwt = false
+
+[functions.analyze-job]
+verify_jwt = false
+
+[functions.seed-database]
+verify_jwt = false
