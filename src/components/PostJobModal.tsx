@@ -191,6 +191,9 @@ export const PostJobModal = ({ open, onOpenChange }: PostJobModalProps) => {
         const errMsg = analysisData?.error || analysisError?.message || '';
         const isCreditIssue = errMsg.includes('credits') || errMsg.includes('402');
         if (isCreditIssue) {
+          // Set flag to show banner on dashboard
+          localStorage.setItem('ai_credits_low', 'true');
+          
           toast({
             title: "Using Simple Matching",
             description: "AI credits exhausted. Using skill-based matching instead.",

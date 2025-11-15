@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BrainCircuit, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface AIAnalysisCardProps {
   onAnalysisComplete: () => void;
@@ -45,8 +45,21 @@ export const AIAnalysisCard = ({ onAnalysisComplete, profileData, resumeText }: 
           // Redirect to AI Matches tab
           onAnalysisComplete();
         }
+      } else if (data?.error?.includes('credits') || data?.error?.includes('402')) {
+        // Set flag for low credit banner
+        localStorage.setItem('ai_credits_low', 'true');
+        
+        toast({
+          title: "AI Credits Low",
+          description: "Unable to run AI analysis. Please add credits or contact support.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : '';
+      if (errMsg.includes('credits') || errMsg.includes('402')) {
+        localStorage.setItem('ai_credits_low', 'true');
+      }
       console.error('Error analyzing profile:', error);
       toast({
         title: "Analysis Failed",

@@ -21,6 +21,7 @@ import { AIAnalysisCard } from "@/components/AIAnalysisCard";
 import { AICareerChatbot } from "@/components/AICareerChatbot";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { LowCreditBanner } from "@/components/LowCreditBanner";
 
 const CandidateDashboard = () => {
   const [activeTab, setActiveTab] = useState("resume");
@@ -29,6 +30,15 @@ const CandidateDashboard = () => {
   const [resumeData, setResumeData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<any>(null);
+  const [showLowCreditBanner, setShowLowCreditBanner] = useState(false);
+
+  // Check for low credit banner
+  useEffect(() => {
+    const lowCreditFlag = localStorage.getItem('ai_credits_low');
+    if (lowCreditFlag === 'true') {
+      setShowLowCreditBanner(true);
+    }
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -170,6 +180,15 @@ const CandidateDashboard = () => {
             AI Career Assistant
           </Button>
         </div>
+
+        {showLowCreditBanner && (
+          <LowCreditBanner 
+            onDismiss={() => {
+              setShowLowCreditBanner(false);
+              localStorage.removeItem('ai_credits_low');
+            }}
+          />
+        )}
 
         <div className="flex gap-6">
           <div className="flex-1">

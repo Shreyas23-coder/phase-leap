@@ -29,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { JobMatchesView } from "./JobMatchesView";
 import { useToast } from "@/hooks/use-toast";
+import { LowCreditBanner } from "@/components/LowCreditBanner";
 
 const RecruiterDashboard = () => {
   const { toast } = useToast();
@@ -38,6 +39,15 @@ const RecruiterDashboard = () => {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [showLowCreditBanner, setShowLowCreditBanner] = useState(false);
+
+  // Check for low credit banner in localStorage (persists across sessions)
+  useEffect(() => {
+    const lowCreditFlag = localStorage.getItem('ai_credits_low');
+    if (lowCreditFlag === 'true') {
+      setShowLowCreditBanner(true);
+    }
+  }, []);
 
   useEffect(() => {
     loadRecruiterJobs();
@@ -232,8 +242,20 @@ const RecruiterDashboard = () => {
               <br />talent faster than ever before.
             </p>
           </div>
+        </div>
+
+        {showLowCreditBanner && (
+          <LowCreditBanner 
+            onDismiss={() => {
+              setShowLowCreditBanner(false);
+              localStorage.removeItem('ai_credits_low');
+            }}
+          />
+        )}
+
+        <div className="flex items-center justify-between mb-6">
           <div className="flex gap-3">
-            <Button 
+            <Button
               size="lg" 
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10"

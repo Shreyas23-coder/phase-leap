@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BrainCircuit, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecruiterAIAnalysisProps {
   jobData: any;
@@ -26,6 +26,9 @@ export const RecruiterAIAnalysis = ({ jobData, onAnalysisComplete }: RecruiterAI
       // If AI returns 402 (no credits), automatically fallback to simple matching
       if (error?.message?.includes('402') || data?.error?.includes('credits')) {
         console.log('AI credits exhausted, falling back to simple matching');
+        
+        // Set flag to show banner
+        localStorage.setItem('ai_credits_low', 'true');
         
         toast({
           title: "Using Simple Matching",
