@@ -13,11 +13,6 @@ serve(async (req) => {
 
   try {
     const { jobData } = await req.json();
-    
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
-    }
 
     // Get Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -82,39 +77,37 @@ Important:
 - Return maximum 10 candidates
 - Use exact candidate IDs from the input`;
 
-    // Call Gemini API
-    const aiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
+    // Call Lovable AI (no API key required)
+    const aiResponse = await fetch('https://api.lovable.app/v1/ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
           }
-        })
-      }
-    );
+        ],
+        temperature: 0.7,
+        max_tokens: 2048,
+      })
+    });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error('Gemini API error:', aiResponse.status, errorText);
-      throw new Error(`Gemini API error: ${aiResponse.status}`);
+      console.error('Lovable AI error:', aiResponse.status, errorText);
+      throw new Error(`AI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const responseText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    const responseText = aiData.choices?.[0]?.message?.content;
     
     if (!responseText) {
-      throw new Error('No response from Gemini');
+      throw new Error('No response from AI');
     }
 
     // Extract JSON from response (handle markdown code blocks)
