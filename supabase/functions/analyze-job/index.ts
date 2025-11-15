@@ -109,7 +109,7 @@ Important:
           error: "Rate limits exceeded. Please try again later.",
           success: false 
         }), {
-          status: 429,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -117,14 +117,21 @@ Important:
       if (aiResponse.status === 402) {
         return new Response(JSON.stringify({ 
           error: "Not enough Lovable AI credits. Please add credits in Settings → Workspace → Usage.",
-          success: false 
+          success: false,
+          fallback: "simple-suggested"
         }), {
-          status: 402,
+          status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      return new Response(JSON.stringify({ 
+        error: `AI API error: ${aiResponse.status}`,
+        success: false 
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const aiData = await aiResponse.json();
